@@ -35,7 +35,7 @@
     const maxHeight = 15000;
 
     const flightData = createCurvedFlightPath(startPos, endPos, maxHeight);
-    const timeStepInSeconds = 30;
+    const timeStepInSeconds = 500;
     const totalSeconds = timeStepInSeconds * (flightData.length - 1);
     const start = Cesium.JulianDate.fromIso8601("2020-03-09T23:10:00Z");
     const stop = Cesium.JulianDate.addSeconds(start, totalSeconds, new Cesium.JulianDate());
@@ -61,21 +61,22 @@
       });
     }
 
-    // Create pulsing effect at start and end points
-    function createPulsingPoint(coords, color) {
-      return viewer.entities.add({
-        position: Cesium.Cartesian3.fromDegrees(coords.longitude, coords.latitude, coords.height),
-        ellipse: new Cesium.EllipseGraphics({
-          semiMajorAxis: new Cesium.CallbackProperty((time, result) => {
-            return 500 + Math.abs(Math.sin(Cesium.JulianDate.secondsDifference(time, start) * 3.0)) * 300;
-          }, false),
-          semiMinorAxis: new Cesium.CallbackProperty((time, result) => {
-            return 500 + Math.abs(Math.sin(Cesium.JulianDate.secondsDifference(time, start) * 3.0)) * 300;
-          }, false),
-          material: new Cesium.ColorMaterialProperty(color.withAlpha(0.1))
-        })
-      });
-    }
+// Create pulsing effect at start and end points
+function createPulsingPoint(coords, color) {
+  return viewer.entities.add({
+    position: Cesium.Cartesian3.fromDegrees(coords.longitude, coords.latitude, coords.height),
+    ellipse: new Cesium.EllipseGraphics({
+      semiMajorAxis: new Cesium.CallbackProperty((time, result) => {
+        return 500 + Math.abs(Math.sin(Cesium.JulianDate.secondsDifference(time, start) * 0.05)) * 25000; // frequency
+      }, false),
+      semiMinorAxis: new Cesium.CallbackProperty((time, result) => {
+        return 500 + Math.abs(Math.sin(Cesium.JulianDate.secondsDifference(time, start) * 0.05)) * 25000; // frequency
+      }, false),
+      material: new Cesium.ColorMaterialProperty(color.withAlpha(0.5)) // Semi-transparent
+    })
+  });
+}
+
 
     createPulsingPoint(startPos, Cesium.Color.RED);
     createPulsingPoint(endPos, Cesium.Color.BLUE);
