@@ -99,46 +99,53 @@
 
     let highlightedEntity = null;
 
-    handler.setInputAction(function (movement) {
-      const pickedObject = viewer.scene.pick(movement.endPosition);
-      if (Cesium.defined(pickedObject) && pickedObject.id) {
-        const entity = pickedObject.id;
-        // Change color on hover
-        if (!highlightedEntity || highlightedEntity !== entity) {
-          if (highlightedEntity) {
-            // Reset previous entity color if it's not the same as the current one
-            highlightedEntity.point.color = Cesium.Color.GREEN;
-          }
-          // Change current entity's color to blue
-          entity.point.color = Cesium.Color.BLUE;
-          highlightedEntity = entity;
-        }
-      } else {
-        // Reset color when hover is no longer on an entity
-        if (highlightedEntity) {
-          highlightedEntity.point.color = Cesium.Color.GREEN;
-        }
-        highlightedEntity = null;
+handler.setInputAction(function (movement) {
+  const pickedObject = viewer.scene.pick(movement.endPosition);
+  if (Cesium.defined(pickedObject) && pickedObject.id) {
+    const entity = pickedObject.id;
+    // Change color on hover
+    if (!highlightedEntity || highlightedEntity !== entity) {
+      if (highlightedEntity && Cesium.defined(highlightedEntity.point)) {
+        // Reset previous entity color if it's not the same as the current one
+        highlightedEntity.point.color = Cesium.Color.GREEN;
       }
-    }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+      // Check if the entity has a point that can be colored
+      if (Cesium.defined(entity.point)) {
+        entity.point.color = Cesium.Color.BLUE;
+        highlightedEntity = entity;
+      }
+    }
+  } else {
+    // Reset color when hover is no longer on an entity
+    if (highlightedEntity && Cesium.defined(highlightedEntity.point)) {
+      highlightedEntity.point.color = Cesium.Color.GREEN;
+    }
+    highlightedEntity = null;
+  }
+}, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 
-    handler.setInputAction(function (movement) {
-      // Reset color when mouse leaves
-      if (highlightedEntity) {
-        highlightedEntity.point.color = Cesium.Color.GREEN;  // Reset to original color
-      }
-      highlightedEntity = null;
-    }, Cesium.ScreenSpaceEventType.MOUSE_LEAVE);
+handler.setInputAction(function (movement) {
+  // Reset color when mouse leaves
+  if (highlightedEntity && Cesium.defined(highlightedEntity.point)) {
+    highlightedEntity.point.color = Cesium.Color.GREEN;  // Reset to original color
+  }
+  highlightedEntity = null;
+}, Cesium.ScreenSpaceEventType.MOUSE_LEAVE);
+
 
     async function loadModel() {
-      const airplaneUri = await Cesium.IonResource.fromAssetId(2819852);
-      const airplaneEntity = viewer.entities.add({
-        availability: new Cesium.TimeIntervalCollection([ new Cesium.TimeInterval({ start: start, stop: stop }) ]),
-        position: positionProperty,
-        model: { uri: airplaneUri },
-        orientation: new Cesium.VelocityOrientationProperty(positionProperty),    
-        path: new Cesium.PathGraphics({ width: 3 })
-      });
+      
+      const airplaneUri = 'https://cdn.glitch.global/baaac6f2-b114-42d2-a063-9a6e540de665/Plane.glb?v=1731432987307'; 
+  
+  const airplaneEntity = viewer.entities.add({
+    availability: new Cesium.TimeIntervalCollection([ 
+      new Cesium.TimeInterval({ start: start, stop: stop }) 
+    ]),
+    position: positionProperty,
+    model: { uri: airplaneUri },
+    orientation: new Cesium.VelocityOrientationProperty(positionProperty),
+    path: new Cesium.PathGraphics({ width: 3 })
+  });
       
       viewer.trackedEntity = airplaneEntity;
     }
