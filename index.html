@@ -7,9 +7,121 @@
 </head>
 <body>
   <div id="cesiumContainer"></div>
-  <script type="module" src="cesiumViewer.js"></script>
-  <script type="module" src="flightPath.js"></script>
-  <script type="module" src="hoverInteraction.js"></script>
-  <script type="module" src="modelLoader.js"></script>
+  <script type="module">
+    Cesium.Ion.defaultAccessToken = 'your-access-token';
+
+    const viewer = new Cesium.Viewer('cesiumContainer', {
+      terrain: Cesium.Terrain.fromWorldTerrain(),
+      imageryProviderViewModels: Cesium.createDefaultImageryProviderViewModels(), // Optional: for different map layers
+    });
+
+    // Add Cloud Layer
+    function addClouds() {
+      viewer.scene.globe.enableLighting = true; // To improve lighting effects, including clouds
+      viewer.scene.globe.baseColor = Cesium.Color.WHITE.withAlpha(0.1); // Set a subtle white base color for the clouds
+
+      const cloudLayer = viewer.scene.imageryLayers.addImageryProvider(
+        new Cesium.ArcGisMapServerImageryProvider({
+          url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer',
+          parameters: { transparent: true, format: 'png' },
+        })
+      );
+      
+      cloudLayer.alpha = 0.5; // Make clouds semi-transparent
+
+      // Customize cloud settings (you can add textures if available)
+      viewer.scene.fog.density = 0.005; // Adjust fog density
+      viewer.scene.fog.fogColor = Cesium.Color.GRAY; // Set the color of the fog
+    }
+
+    // Add Fog Effect
+    function addFog() {
+      viewer.scene.fog.enabled = true; // Enable fog
+      viewer.scene.fog.density = 0.01; // Set fog density (adjust based on preference)
+      viewer.scene.fog.fogColor = Cesium.Color.LIGHTGRAY; // Set fog color (whiteish/grayish)
+    }
+
+    // Function to generate curved flight path
+    function createCurvedFlightPath(start, end, maxHeight, numPoints = 100) {
+      const points = [];
+      for (let i = 0; i <= numPoints; i++) {
+          const t = i / numPoints;
+          const longitude = Cesium.Math.lerp(start.longitude, end.longitude, t);
+          const latitude = Cesium.Math.lerp(start.latitude, end.latitude, t);
+          const height = (1 - Math.pow(2 * t - 1, 2)) * maxHeight;
+          points.push({ longitude, latitude, height });
+      }
+      return points;
+    }
+
+    const startPos = { longitude: 77.10262546930659, latitude: 28.56129819077646, height: 0 };
+    const endPos = { longitude: 77.70795001282222, latitude: 13.201259466639428, height: 0 };
+    const maxHeight = 15000;
+
+    const flightData = createCurvedFlightPath(startPos, endPos, maxHeight);
+    const timeStepInSeconds = 500;
+    const totalSeconds = timeStepInSeconds * (flightData.length - 1);
+    const start = Cesium.JulianDate.fromIso8601("2020-03-09T23:10:00Z");
+    const stop = Cesium.JulianDate.addSeconds(start, totalSeconds, new Cesium.JulianDate());
+    viewer.clock.startTime = start.clone();
+    viewer.clock.stopTime = stop.clone();
+    viewer.clock.currentTime = start.clone();
+    viewer.timeline.zoomTo(start, stop);
+    viewer.clock.multiplier = 50;
+    viewer.clock.shouldAnimate = true;
+
+    const positionProperty = new Cesium.SampledPositionProperty();
+
+    for (let i = 0; i < flightData.length; i++) {
+      const dataPoint = flightData[i];
+      const time = Cesium.JulianDate.addSeconds(start, i * timeStepInSeconds, new Cesium.JulianDate());
+      const position = Cesium.Cartesian3.fromDegrees(dataPoint.longitude, dataPoint.latitude, dataPoint.height);
+      positionProperty.addSample(time, position);
+
+      viewer.entities.add({
+        description: `Location: (${dataPoint.longitude}, ${dataPoint.latitude}, ${dataPoint.height})`,
+        position: position,
+        point: { pixelSize: 15, color: Cesium.Color.GREEN }
+      });
+    }
+
+    // Create pulsing effect at start and end points
+    function createPulsingPoint(coords, color) {
+      return viewer.entities.add({
+        position: Cesium.Cartesian3.fromDegrees(coords.longitude, coords.latitude, coords.height),
+        ellipse: new Cesium.EllipseGraphics({
+          semiMajorAxis: new Cesium.CallbackProperty((time, result) => {
+            return 500 + Math.abs(Math.sin(Cesium.JulianDate.secondsDifference(time, start) * 0.05)) * 25000; // frequency
+          }, false),
+          semiMinorAxis: new Cesium.CallbackProperty((time, result) => {
+            return 500 + Math.abs(Math.sin(Cesium.JulianDate.secondsDifference(time, start) * 0.05)) * 25000; // frequency
+          }, false),
+          material: new Cesium.ColorMaterialProperty(color.withAlpha(0.5)) // Semi-transparent
+        })
+      });
+    }
+
+    createPulsingPoint(startPos, Cesium.Color.RED);
+    createPulsingPoint(endPos, Cesium.Color.BLUE);
+
+    // Call the weather effect functions
+    addClouds();
+    addFog();
+
+    async function loadModel() {
+      const airplaneUri = await Cesium.IonResource.fromAssetId(2819852);
+      const airplaneEntity = viewer.entities.add({
+        availability: new Cesium.TimeIntervalCollection([ new Cesium.TimeInterval({ start: start, stop: stop }) ]),
+        position: positionProperty,
+        model: { uri: airplaneUri },
+        orientation: new Cesium.VelocityOrientationProperty(positionProperty),    
+        path: new Cesium.PathGraphics({ width: 3 })
+      });
+      
+      viewer.trackedEntity = airplaneEntity;
+    }
+
+    loadModel();
+  </script>
 </body>
 </html>

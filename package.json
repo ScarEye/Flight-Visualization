@@ -1,7 +1,7 @@
 {
-  "name": "cesium-template",
+  "name": "cesium",
   "version": "0.0.1",
-  "description": "A simple Cesium template.",
+  "description": "A Flight Simulation in Cesium.",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
@@ -12,7 +12,6 @@
   "engines": {
     "node": "8.x"
   },
-  "license": "MIT",
   "keywords": [
     "cesium",
     "glitch",
