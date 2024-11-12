@@ -8,7 +8,7 @@
 <body>
   <div id="cesiumContainer"></div>
   <script type="module">
-    Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIwMWJhM2VhNy00NTY2LTRmN2UtYTU3MS0yZDBkZjgyMWMyZTciLCJpZCI6MjU0NzAyLCJpYXQiOjE3MzE0MTI3MjZ9.y9ZGaBs3bTLo6muQUPGVGpgswAhb1C5D8fTRP8KHfE0';
+    Cesium.Ion.defaultAccessToken = 'your access token';
 
     const viewer = new Cesium.Viewer('cesiumContainer', {
       terrain: Cesium.Terrain.fromWorldTerrain(),
@@ -21,7 +21,8 @@
     function createCurvedFlightPath(start, end, maxHeight, numPoints = 100) {
       const points = [];
       for (let i = 0; i <= numPoints; i++) {
-          const t = i / numPoints;
+        const t = i / numPoints;
+
           const longitude = Cesium.Math.lerp(start.longitude, end.longitude, t);
           const latitude = Cesium.Math.lerp(start.latitude, end.latitude, t);
           const height = (1 - Math.pow(2 * t - 1, 2)) * maxHeight;
@@ -94,6 +95,7 @@
     createPulsingPoint(startPos, Cesium.Color.RED);
     createPulsingPoint(endPos, Cesium.Color.BLUE);
     
+    
     // Add hover interaction to highlight points for any entity
     const handler = new Cesium.ScreenSpaceEventHandler(viewer.canvas);
 
@@ -132,17 +134,6 @@ handler.setInputAction(function (movement) {
   highlightedEntity = null;
 }, Cesium.ScreenSpaceEventType.MOUSE_LEAVE);
 
-// Add cloud layer
-viewer.scene.imageryLayers.addImageryLayer(
-  Cesium.createWorldImagery({
-    layer: 'BingMaps',
-    style: Cesium.BingMapsStyle.AERIAL
-  })
-);
-
-// You can tweak settings like cloud opacity here
-viewer.scene.globe.enableLighting = true; // Enable globe lighting (affects how the clouds look under lighting)
-viewer.scene.skyBox.show = true; // Show skybox for better cloud rendering
 
     async function loadModel() {
       
@@ -162,6 +153,81 @@ viewer.scene.skyBox.show = true; // Show skybox for better cloud rendering
     }
 
     loadModel();
+
+const layer = viewer.imageryLayers.addImageryProvider(
+  await Cesium.IonImageryProvider.fromAssetId(3),
+  await Cesium.IonImageryProvider.fromAssetId(2),
+);
+
+// clouds
+Cesium.Math.setRandomNumberSeed(2.5);
+function getRandomNumberInRange(minValue, maxValue) {
+  return minValue + Cesium.Math.nextRandomNumber() * (maxValue - minValue);
+}
+const clouds = new Cesium.CloudCollection();
+
+
+// Helper function to convert a random distance and angle into longitude and latitude offsets
+function getRandomPositionWithinRadius(centerLong, centerLat, radiusMeters) {
+  const earthRadius = 6371000; // Radius of Earth in meters
+
+  // Generate a random distance within the given radius and a random angle
+  const distance = Math.sqrt(Math.random()) * radiusMeters; // Square root to ensure uniform distribution
+  const angle = Math.random() * 2 * Math.PI;
+
+  // Calculate latitude and longitude offsets
+  const deltaLat = distance * Math.cos(angle) / earthRadius * (180 / Math.PI);
+  const deltaLong = distance * Math.sin(angle) / (earthRadius * Math.cos(centerLat * Math.PI / 180)) * (180 / Math.PI);
+
+  // Return the new position within the radius
+  return {
+    long: centerLong + deltaLong,
+    lat: centerLat + deltaLat
+  };
+}
+
+// Function to create random clouds within a radius around a central point
+function createRandomClouds(
+  numClouds,
+  centerLong,
+  centerLat,
+  radiusMeters,
+  minHeight,
+  maxHeight,
+) {
+  for (let i = 0; i < numClouds; i++) {
+    const { long, lat } = getRandomPositionWithinRadius(centerLong, centerLat, radiusMeters);
+    const height = getRandomNumberInRange(minHeight, maxHeight);
+    const scaleX = getRandomNumberInRange(150, 350);
+    const scaleY = scaleX / 2.0 - getRandomNumberInRange(0, scaleX / 4.0);
+    const slice = getRandomNumberInRange(0.3, 0.7);
+    const depth = getRandomNumberInRange(5, 20);
+    const aspectRatio = getRandomNumberInRange(1.5, 2.1);
+    const cloudHeight = getRandomNumberInRange(5, 20);
+
+    clouds.add({
+      position: Cesium.Cartesian3.fromDegrees(long, lat, height),
+      scale: new Cesium.Cartesian2(scaleX, scaleY),
+      maximumSize: new Cesium.Cartesian3(
+        aspectRatio * cloudHeight,
+        cloudHeight,
+        depth,
+      ),
+      slice: slice,
+    });
+  }
+}
+
+// Create clouds on start position
+createRandomClouds(2000, startPos.longitude, startPos.latitude, 20000, 250, 350);
+
+// Create clouds on end position
+createRandomClouds(5000, endPos.longitude, endPos.latitude, 15000, 1250, 1350);
+
+viewer.scene.primitives.add(clouds);
+
+viewer.scene.fog.density = 1.15e-4; 
+
   </script>
 </body>
 </html>
