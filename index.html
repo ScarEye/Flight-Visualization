@@ -74,21 +74,6 @@
       });
       }    
     }
-
-    // Add SkyBox (Clouds in the sky)
-    function addSkyBox() {
-      // Use a skybox image (can be replaced with your own cloud textures)
-      viewer.scene.skyBox = new Cesium.SkyBox({
-        sources: {
-          positiveX: 'https://cesium.com/downloads/cesiumjs/releases/1.123/Assets/Textures/skybox/px.png',
-          negativeX: 'https://cesium.com/downloads/cesiumjs/releases/1.123/Assets/Textures/skybox/nx.png',
-          positiveY: 'https://cesium.com/downloads/cesiumjs/releases/1.123/Assets/Textures/skybox/py.png',
-          negativeY: 'https://cesium.com/downloads/cesiumjs/releases/1.123/Assets/Textures/skybox/ny.png',
-          positiveZ: 'https://cesium.com/downloads/cesiumjs/releases/1.123/Assets/Textures/skybox/pz.png',
-          negativeZ: 'https://cesium.com/downloads/cesiumjs/releases/1.123/Assets/Textures/skybox/nz.png'
-        }
-      });
-    }
   
     
     
@@ -110,8 +95,6 @@
 
     createPulsingPoint(startPos, Cesium.Color.RED);
     createPulsingPoint(endPos, Cesium.Color.BLUE);
-
-    addSkyBox(); // Adds clouds as a skybox
     
     // Add hover interaction to highlight points for any entity
     const handler = new Cesium.ScreenSpaceEventHandler(viewer.canvas);
