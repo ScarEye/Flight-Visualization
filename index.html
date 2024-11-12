@@ -132,6 +132,17 @@ handler.setInputAction(function (movement) {
   highlightedEntity = null;
 }, Cesium.ScreenSpaceEventType.MOUSE_LEAVE);
 
+// Add cloud layer
+viewer.scene.imageryLayers.addImageryLayer(
+  Cesium.createWorldImagery({
+    layer: 'BingMaps',
+    style: Cesium.BingMapsStyle.AERIAL
+  })
+);
+
+// You can tweak settings like cloud opacity here
+viewer.scene.globe.enableLighting = true; // Enable globe lighting (affects how the clouds look under lighting)
+viewer.scene.skyBox.show = true; // Show skybox for better cloud rendering
 
     async function loadModel() {
       
