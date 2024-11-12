@@ -1,6 +1,3 @@
-Cesium Template App
-===================
+This project is a prototype for a 3D flight visualization platform using Cesium.js. It aims to render interactive, real-time flight paths and simulate aircraft trajectories on a virtual globe. The platform allows users to visualize routes, altitudes, and velocities, leveraging Cesium's powerful geospatial capabilities for realistic terrain, atmospheric effects, and global context. The project includes dynamic model loading and control interfaces for exploring different flight paths, making it a versatile tool for educational, simulation, and aviation analytics applications.
 
-This is a template for making Cesium apps. Click on `index.html` on the left to see the code.
-
-New to Cesium? Visit our [learning center](http://cesium.com/docs) to get started.
+You can download and run directly on a server or use VSCode Live Server extension for testing.
