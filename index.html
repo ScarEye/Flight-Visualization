@@ -53,18 +53,26 @@
       const time = Cesium.JulianDate.addSeconds(start, i * timeStepInSeconds, new Cesium.JulianDate());
       const position = Cesium.Cartesian3.fromDegrees(dataPoint.longitude, dataPoint.latitude, dataPoint.height);
       positionProperty.addSample(time, position);
-
+      
+      console.log("Hello world!");
+      
+      if(i==0 ){
       viewer.entities.add({
         description: `Location: (${dataPoint.longitude}, ${dataPoint.latitude}, ${dataPoint.height})`,
         position: position,
         point: { 
-          if(i==0 || i==flightData.length-1){
-            
-          }
-          pixelSize: 15, color: Cesium.Color.GREEN
-        
-        }
+          pixelSize: 25, color: Cesium.Color.GREEN }
       });
+      } 
+      else{
+  
+      viewer.entities.add({
+        description: `Location: (${dataPoint.longitude}, ${dataPoint.latitude}, ${dataPoint.height})`,
+        position: position,
+        point: { 
+          pixelSize: 15, color: Cesium.Color.GREEN }
+      });
+      }    
     }
 
     // Add SkyBox (Clouds in the sky)
